@@ -34,11 +34,10 @@ void Server::run()
                             &client._clilen);
         std::cout << "Client connected" << std::endl;
         receiveData(client);//blocking operation
-        
-        //check if path in request exist
-        std::ifstream file(_buffer._data, std::ifstream::binary);
-        file >> std::noskipws;
-        if(!file.good())
+
+        struct File file;
+        std::string filePath(_buffer._data);
+        if(!file.loadFile(filePath))
         {
             //File doesn't exist
             //Inform client about and close connection
@@ -49,39 +48,33 @@ void Server::run()
             bzero(_buffer._data, _buffer._size);
             continue;
         }
-        //Get file size
-        file.seekg(0, file.end);
-        int fileSize = file.tellg();
-        file.seekg(0, file.beg);
         //Send length of file to client
-        uint16_t frameSize = sizeof(int);
+        struct Frame frame;
+        frame.copyDataToFrame(file._fileSize);
         
-
+        int err = send(client._socketfd, frame._data.data(), frame._size, 0);
 
 
 
 
         
-        //Copy file into vector
-        std::vector<char> fileVec;
-        std::copy(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), std::back_inserter(fileVec));
-        std::vector<char>::iterator it = fileVec.begin();
+        
         //Now send the data
         struct Buffer buff;
         while(true)
         {
             //copy next data block into buffer
-            if(it+1024 <= fileVec.end())//Default size 1024
+            if(file._it+1024 <= file._data.end())//Default size 1024
             {
-                std::copy(it, it+1024, buff._data);
+                std::copy(file._it, file._it+1024, buff._data);
                 buff._size = 1024;
-                it += 1024;
+                file._it += 1024;
                 std::cout << "sent 1024 bytes to client" << std::endl;
             }
             else//If rest of the data isn't 1024 chars big, send rest
             {
-                int left = fileVec.end() - it;
-                std::copy(it, it+left, buff._data);
+                int left = file._data.end() - file._it;
+                std::copy(file._it, file._it+left, buff._data);
                 buff._size = left;
                 std::cout << "sent " << left << " bytes to client" << std::endl;
             }
@@ -89,7 +82,7 @@ void Server::run()
             send(client._socketfd, buff._data, buff._size, 0);
             
             //Check if everything is sent
-            if(it == fileVec.end())
+            if(file._it == file._data.end())
                 break;
             else
             {
@@ -112,7 +105,7 @@ void Server::receiveData(struct Client client)
 {
     //Wait for client to send path to requested file(BLOCKING)
     int readSize = recv(client._socketfd, _buffer._data, _buffer._max, 0);
-    if(readSize > 0)//we do not care about datagram packets, those can be 0 in length
+    if(readSize < 1)//we do not care about datagram packets, those can be 0 in length
         Debug::error("ERROR on reading packet");
     _buffer._size = readSize;
 }

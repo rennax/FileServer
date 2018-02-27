@@ -32,6 +32,46 @@ struct Buffer
     size_t _max = 1024;
 };
 
+struct Frame
+{
+    uint16_t _size;
+    std::vector<char> _data;
+
+    template<typename T>
+    void copyDataToFrame(T src)
+    {
+        _size = sizeof(src)+sizeof(_size);
+        _data.resize(_size);
+        //copy _size into data
+        memcpy(_data.data(), &_size, sizeof(_size));
+        //Copy src into data
+        memcpy(_data.data() + sizeof(_size), &src, sizeof(src));
+    }
+};
+
+struct File
+{
+    std::vector<char> _data;
+    std::vector<char>::iterator _it;
+    int _fileSize;
+
+    bool loadFile(std::string filePath)
+    {
+        //check if path in request exist
+        std::ifstream file(filePath, std::ifstream::binary);
+        file >> std::noskipws;
+
+        //Copy file into vector
+        std::copy(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>(), std::back_inserter(_data));
+        _it = _data.begin();
+
+        //Get file size
+        file.seekg(0, file.end);
+        _fileSize = file.tellg();
+        return _fileSize > 0 ? true : false;
+    }
+};
+
 
 class Server
 {
