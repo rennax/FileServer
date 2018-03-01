@@ -16,7 +16,9 @@ int main(int argc, char *argv[])
     Client client;
     client.connectTo(ipC_str, 9000);
     int fileSize = 0;
-    client.requestFile(fileSize, filePath);
+    struct Frame frame;
+    frame.copyStringToFrame(filePath);
+    client.requestFile(fileSize, frame);
     
 
     

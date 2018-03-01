@@ -3,10 +3,10 @@ INCLUDE_PATH=Libs/
 
 
 CC=g++
-CFLAGS= -c -std=c++11 -Wall -g
+CFLAGS= -c -std=c++11 -g -Wall
 
 client: libraries
-	$(CC) main.cpp $(wildcard libraries/*) -I$(INCLUDE_PATH) -o file_client
+	$(CC) main.cpp $(wildcard libraries/*) -I$(INCLUDE_PATH) -o client
 
 libraries:
 	mkdir libraries/
@@ -18,4 +18,4 @@ libraries:
 	done
 
 clean: 
-	rm -rf libraries/ server
+	rm -rf libraries/ client

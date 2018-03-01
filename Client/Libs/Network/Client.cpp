@@ -78,6 +78,39 @@ void Client::requestFile(int &fileSizeOut, std::string fileName)
    
 }
 
+void Client::requestFile(int &fileSizeOut, struct Frame fileName)
+{
+    //Size of the frame to be received, not including the framesize at the start of recv
+
+    int err = send(socketfd, fileName._data.data(), fileName._size, 0);
+    if(err < 0)
+        Debug::error("Error, failed to send request to server");
+    //Recv file size, if 0 file doesn't exist
+    int size = recv(socketfd, buff, 1000, 0);
+    if(size<0)
+        Debug::error("Error, couldn't recv from server");
+
+
+    if(fileName._size == size-2) //Everything was received in first recv
+    {
+        fileSizeOut = (buff[2]<<24)|(buff[3]<<16)|(buff[4]<<8)|(buff[5]);
+        return;
+    }
+    char *result = new char[fileName._size];
+    int bytesMoved = 0;
+    bytesMoved = size-2;
+    std::copy(buff+2, buff+bytesMoved,result);
+    bzero(buff, size);
+    while(fileName._size > bytesMoved)
+    {
+        size = recv(socketfd, buff, 1000, 0);
+        std::copy(buff, buff+size,result);
+        bytesMoved += size;
+        bzero(buff, size);
+    }
+    fileSizeOut = (result[0]<<24)|(result[1]<<16)|(result[2]<<8)|(result[3]);
+}
+
 void Client::receiveFile(std::vector<char> &dataOut, std::string fileName)
 {
 

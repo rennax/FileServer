@@ -30,12 +30,26 @@ struct Buffer
     char _data[1024];
     size_t _size = 0;
     size_t _max = 1024;
+
+    Buffer()
+    {
+        clearBuffer();
+    }
+
+    void clearBuffer()
+    {
+        //Clear buffer for all values before first use
+        bzero(_data, _max);
+    }
+
 };
 
 struct Frame
 {
     uint16_t _size;
     std::vector<char> _data;
+
+    const char* deliminator = "<EOF>";
 
     template<typename T>
     void copyDataToFrame(T src)
