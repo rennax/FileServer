@@ -40,35 +40,59 @@ bool DataFrame::getDataFromFrame(std::vector<char> &outBuffer)
 }
 
 
-/*
-Data from socket can be passed directly into dataframe.
-When a full frame is received, data is returned via outbuffer and true is returned.l
-
-*/
-bool setGetDataFrame(char *buffer, size_t size, std::vector<char> &outBuffer)
+void DataFrame::setFrameSize(char *buffer, size_t size)
 {
     size_t uint16Size = sizeof(uint16_t);
-    //First time frame is used
-    if(_frameSize == 0)
-        if(size > 2)
-            memcpy(&_frameSize, buffer, uint16Size);//Set frame size
+    _frameSize = 0; //Makes sure setFramesize is called again if framesize couldn't be set
+    //set framesize
+    if(size >= 2)
+    {
+        if(_msbFrameSize != NULL)
+        {
+            _frameSize = _msbFrameSize << 8;//Bitshift msb into framesize
+            memcpy(&_frameSize, buffer, uint16Size);
+            _dataOffset = 0;
+        }
+        else
+        {
+            memcpy(&_frameSize, buffer, uint16Size);
+            _dataOffset = 0;
+        }
+
+    }
+    else if(size == 1)
+        _msbFrameSize = buffer[0];
+    else
+        _dataOffset = 1;//Not enough data received to get framesize, wait for next buffer
+}
+
+/*
+Data from socket can be passed directly into dataframe.
+When a full frame is received, data is returned via outbuffer and true is returned. Any remaining data,
+is moved into the frame
+*/
+bool DataFrame::setGetDataFrame(char *buffer, size_t size, std::vector<char> &outBuffer)
+{
+    size_t uint16Size = sizeof(uint16_t);
     if(size + _dataOffset > _frameSize)
     {
         size_t remaining = (size + _dataOffset) - _frameSize;
-        memcpy(_data.data() + _dataOffset, buffer, remaining);
+        size_t toCopy = _frameSize-_dataOffset;
         //copy remaining of current frame into data
-
-        //return data via out buffer
-
+        memcpy(_data.data() + _dataOffset, buffer, toCopy);
+        //return data - framesize via out buffer
+        std::copy(_data.begin() + uint16Size, _data.end(), std::back_inserter(outBuffer));
+        setFrameSize(buffer+toCopy, remaining);
         //copy remaining data into frame
+        memcpy(_data.data(), buffer+toCopy, remaining);
         return true;
     }
-    else if(size + _dataOffset <= _frameSize)
+    else if(size + _dataOffset < _frameSize)
     {
         //Copy data into frame
 
         //return data via out buffer if whole frame is received
-        if(_data.size() == )
+        if(_data.size() == 0)
 
         //reset frame
         return true;
@@ -91,7 +115,8 @@ bool setGetDataFrame(char *buffer, size_t size, std::vector<char> &outBuffer)
         if(size + _dataOffset > 1000)
         {
             //Check remaining bytes of current frame
-            size_t remaining = (size + _dataOffset) - _frameSize
+            size_t remaining = (size + _dataOffset) - _frameSize;
+            return true;
         }
         else
         {
@@ -103,7 +128,7 @@ bool setGetDataFrame(char *buffer, size_t size, std::vector<char> &outBuffer)
             memcpy(_data.data(), &_frameSize, uint16Size);
             //Copy string into data
             memcpy(_data.data() + uint16Size, &_frameSize, _dataOffset);
-            return true
+            return true;
         }
 
     }

@@ -16,8 +16,10 @@ public:
     //Once a full frame is received, it will be appended to outBuffer
     bool setGetDataFrame(char *buffer, size_t size, std::vector<char> &outBuffer);
 private:
+    void setFrameSize(char *buffer, size_t size);
     uint16_t _frameSize;
     uint16_t _dataOffset;
+    char _msbFrameSize;
     std::vector<char> _data;//2 first bytes are reserved for size of the actual data "_dataOffset"
 };
 
