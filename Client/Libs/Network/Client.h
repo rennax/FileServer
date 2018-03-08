@@ -23,8 +23,7 @@ public:
     //Client(char *ip, int portno);
     ~Client();
     void connectTo(const char *ip, int port);//Should be used if client is constructed with default constructor
-    void requestFile(int &fileSizeOut, std::string fileName);
-    void requestFile(int &fileSizeOut, DataFrame fileName);
+    void requestFile(DataFrame fileName);
     void receiveFile(std::vector<char> &dataOut);
 private:
     char buff[1000];
