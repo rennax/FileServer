@@ -8,7 +8,7 @@ DataFrame::DataFrame(bool usedToRecv)
     _usedToRecv = usedToRecv;
 }
 
-void DataFrame::setDataInFrame(const char *buffer, uint32_t size)
+void DataFrame::setDataInFrame(const char *buffer, size_t size)
 {
     if(_usedToRecv)
     {
@@ -77,7 +77,7 @@ bool DataFrame::recvData(int sockfd)
     }
     setFrameSize(buff);
 
-    std::cout << "Framesize of current recv"<< _frameSize << std::endl;
+    std::cout << "Framesize of current recv " << _frameSize << std::endl;
 
     //Copy remaining data into vector
     std::copy(buff+4, buff+size, std::back_inserter(_data));

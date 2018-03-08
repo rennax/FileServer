@@ -1,3 +1,4 @@
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,7 +12,7 @@
 #include <string>
 #include <algorithm>
 #include "Debug/Error.h"
-
+#include "DataFrame.h"
 
 
 
@@ -23,8 +24,8 @@ public:
     ~Client();
     void connectTo(const char *ip, int port);//Should be used if client is constructed with default constructor
     void requestFile(int &fileSizeOut, std::string fileName);
-    void requestFile(int &fileSizeOut, struct Frame fileName);
-    void receiveFile(std::vector<char> &dataOut, std::string fileName);
+    void requestFile(int &fileSizeOut, DataFrame fileName);
+    void receiveFile(std::vector<char> &dataOut);
 private:
     char buff[1000];
     int socketfd;

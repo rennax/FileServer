@@ -13,6 +13,7 @@
 #include <fstream>
 #include <iostream>
 #include "Debug/Error.h"
+#include "DataFrame.h"
 
 struct Client
 {
@@ -44,30 +45,12 @@ struct Buffer
 
 };
 
-struct Frame
-{
-    uint16_t _size;
-    std::vector<char> _data;
-
-    const char* deliminator = "<EOF>";
-
-    template<typename T>
-    void copyDataToFrame(T src)
-    {
-        _size = sizeof(src)+sizeof(_size);
-        _data.resize(_size);
-        //copy _size into data
-        memcpy(_data.data(), &_size, sizeof(_size));
-        //Copy src into data
-        memcpy(_data.data() + sizeof(_size), &src, sizeof(src));
-    }
-};
-
 struct File
 {
     std::vector<char> _data;
     std::vector<char>::iterator _it;
-    int _fileSize;
+    uint32_t _fileSize;
+    
 
     bool loadFile(std::string filePath)
     {
@@ -94,8 +77,8 @@ public:
     ~Server();
     void run();
     void sendString(struct Client client, std::string &str);
-    //void sendData(std::vector<char> &payload);
-    void receiveData(struct Client client);
+    void sendData(std::vector<char> &payload);
+    void receiveData(struct Client client, DataFrame &frame);
 private:
     struct sockaddr_in _addr;
     struct Buffer _buffer;
